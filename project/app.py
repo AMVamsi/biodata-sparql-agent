@@ -2,11 +2,14 @@ import asyncio
 import logging
 import time
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
+)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 from langchain_core.language_models import BaseChatModel
 import httpx
+
 
 ## 1. Set up LLM provider
 def load_chat_model(model: str) -> BaseChatModel:
@@ -19,7 +22,6 @@ def load_chat_model(model: str) -> BaseChatModel:
             model=model_name,
             temperature=0,
             max_tokens=1024,
-            
         )
     if provider == "groq":
         # https://python.langchain.com/docs/integrations/chat/groq/
@@ -31,6 +33,7 @@ def load_chat_model(model: str) -> BaseChatModel:
             max_tokens=1024,
         )
     raise ValueError(f"Unknown provider: {provider}")
+
 
 llm = load_chat_model("mistralai/mistral-small-latest")
 # llm = load_chat_model("groq/meta-llama/llama-4-scout-17b-16e-instruct")
@@ -54,10 +57,11 @@ from sparql_llm import SparqlExamplesLoader, SparqlVoidShapesLoader, SparqlInfoL
 
 ## 2. Set up vector database for document retrieval
 endpoints: list[dict[str, str]] = [
-    { "endpoint_url": "https://sparql.uniprot.org/sparql/" },
-    { "endpoint_url": "https://www.bgee.org/sparql/" },
-    { "endpoint_url": "https://sparql.omabrowser.org/sparql/" },
+    {"endpoint_url": "https://sparql.uniprot.org/sparql/"},
+    {"endpoint_url": "https://www.bgee.org/sparql/"},
+    {"endpoint_url": "https://sparql.omabrowser.org/sparql/"},
 ]
+
 
 def index_endpoints():
     """Index SPARQL endpoints metadata in the vector database."""
@@ -81,7 +85,9 @@ def index_endpoints():
         vectordb.delete_collection(collection_name)
     vectordb.create_collection(
         collection_name=collection_name,
-        vectors_config=VectorParams(size=embedding_dimensions, distance=Distance.COSINE),
+        vectors_config=VectorParams(
+            size=embedding_dimensions, distance=Distance.COSINE
+        ),
     )
     embeddings = embedding_model.embed([q.page_content for q in docs])
     vectordb.upload_collection(
@@ -98,6 +104,8 @@ from qdrant_client.models import FieldCondition, Filter, MatchValue, ScoredPoint
 
 ## 3. Set up document retrieval and system prompt
 retrieved_docs_count = 3
+
+
 def retrieve_docs(question: str) -> list[ScoredPoint]:
     """Retrieve documents relevant to the user's question."""
     question_embeddings = next(iter(embedding_model.embed([question])))
@@ -139,6 +147,7 @@ def format_doc(doc: ScoredPoint) -> str:
     )
     return f"\n{doc.payload['question']} ({doc.payload.get('endpoint_url', '')}):\n\n```{doc_lang}\n{doc.payload.get('answer')}\n```\n\n"
 
+
 SYSTEM_PROMPT = """You are an assistant that helps users to write SPARQL queries.
 Put the SPARQL query inside a markdown codeblock with the "sparql" language tag, and always add the URL of the endpoint on which the query should be executed in a comment at the start of the query inside the codeblocks starting with "#+ endpoint: " (always only 1 endpoint).
 Use the queries examples and classes shapes provided in the prompt to derive your answer, don't try to create a query from nothing and do not provide a generic query.
@@ -170,21 +179,25 @@ Here is a list of documents (reference questions and query answers, classes sche
 from sparql_llm.validate_sparql import extract_sparql_queries
 from sparql_llm.utils import query_sparql
 
+
 ## 4. Execute generated SPARQL query
 def execute_query(last_msg: str) -> list[dict[str, str]]:
     """Extract SPARQL query from markdown and execute it."""
     for extracted_query in extract_sparql_queries(last_msg):
         if extracted_query.get("query") and extracted_query.get("endpoint_url"):
-            res = query_sparql(extracted_query.get("query"), extracted_query.get("endpoint_url"))
+            res = query_sparql(
+                extracted_query.get("query"), extracted_query.get("endpoint_url")
+            )
             return res.get("results", {}).get("bindings", [])
 
-## 5. Setup chat web UI (with Chainlit)
 
+## 5. Setup chat web UI (with Chainlit)
 
 
 import json
 
 max_try_count = 3
+
 
 async def main():
     question = "What are the rat orthologs of human TP53?"
@@ -214,10 +227,20 @@ async def main():
         query_res = execute_query(complete_answer)
         if len(query_res) < 1:
             logging.warning("⚠️ No results, trying to fix")
-            messages.append(("user", f"""The query you provided returned no results, please fix the query:\n\n{complete_answer}"""))
+            messages.append(
+                (
+                    "user",
+                    f"""The query you provided returned no results, please fix the query:\n\n{complete_answer}""",
+                )
+            )
         else:
             logging.info(f"✅ Got {len(query_res)} results, summarizing them")
-            messages.append(("user", f"""The query you provided returned these results, summarize them:\n\n{json.dumps(query_res, indent=2)}"""))
+            messages.append(
+                (
+                    "user",
+                    f"""The query you provided returned these results, summarize them:\n\n{json.dumps(query_res, indent=2)}""",
+                )
+            )
             query_success = True
         time.sleep(1)  # Wait for a moment before retrying
 
@@ -226,9 +249,6 @@ async def main():
 # Here is the description of resources available at the SIB:
 # {context}
 # Use it to answer the question"""
-
-
-
 
 
 # if not vectordb.collection_exists(collection_name) or vectordb.get_collection(collection_name).points_count == 0:
@@ -240,14 +260,14 @@ async def main():
 
 # async def main() -> None:
 #     question = "Which databases are available for protein structure?"
-    
+
 #     print(f"🤔 User Question: {question}")
-    
+
 #     # Step 3: Create fresh embedding for this question (FAST - per query)
 #     print("🔄 Creating embedding for question...")
 #     question_embedding = list(embedding_model.embed([question]))[0]
 #     print(f"✅ Question embedded: {len(question_embedding)} dimensions")
-    
+
 #     # Step 3: Search stored database vectors (FAST - uses pre-computed vectors)
 #     print("🔍 Searching for relevant database information...")
 #     search_results = vectordb.search(
@@ -255,7 +275,7 @@ async def main():
 #         query_vector=question_embedding.tolist(),
 #         limit=3  # Get top 3 most relevant documents
 #     )
-    
+
 #     print(f"📋 Found {len(search_results)} relevant documents:")
 #     context_parts = []
 #     for i, result in enumerate(search_results, 1):
@@ -263,17 +283,17 @@ async def main():
 #         metadata = result.payload
 #         print(f"   {i}. Score: {score:.3f} | {metadata.get('question', 'N/A')[:80]}...")
 #         context_parts.append(metadata.get('question', '') + ": " + metadata.get('answer', ''))
-    
+
 #     # Step 3: Combine relevant context
 #     context = "\n\n".join(context_parts)
-    
+
 #     # Step 3: Get final answer from LLM
 #     print("\n🤖 Generating response with relevant context...")
 #     for resp in llm.stream(SYSTEM_PROMPT.format(context=context) + "\n\nQuestion: " + question):
 #         print(resp.content, end="", flush=True)
 #         if resp.usage_metadata:
 #             print(f"\n\n💰 Token usage: {resp.usage_metadata}")
-    
+
 #     print("\n\n" + "="*50)
 #     print("🎯 EMBEDDING SUMMARY:")
 #     print("✅ Database documents: Embedded ONCE at startup (384 docs)")
@@ -282,11 +302,10 @@ async def main():
 #     print("✅ Result: Relevant context for accurate answer")
 
 
-
-    # for resp in llm.stream(SYSTEM_PROMPT.format(context=response.text) + "\n" + question):
-    #     print(resp.content, end="", flush=True)
-    #     if resp.usage_metadata:
-    #         print(f"\n\n{resp.usage_metadata}")
+# for resp in llm.stream(SYSTEM_PROMPT.format(context=response.text) + "\n" + question):
+#     print(resp.content, end="", flush=True)
+#     if resp.usage_metadata:
+#         print(f"\n\n{resp.usage_metadata}")
 
 # async def main():
 #     question = "What are the rat orthologs of human TP53?"
@@ -300,19 +319,19 @@ async def main():
 
 #     # print("=== GETTING A COMPLETE RESPONSE ===")
 #     # resp = llm.invoke(question)
-    
+
 #     # print("\n🔍 **Key Response Properties:**")
 #     # print(f"📝 Content: {resp.content[:100]}...")
 #     # print(f"🆔 ID: {resp.id}")
 #     # print(f"🏷️  Type: {resp.type}")
 #     # print(f"📊 Usage Metadata: {resp.usage_metadata}")
 #     # print(f"🔧 Response Metadata: {resp.response_metadata}")
-    
+
 #     # print(f"\n🛠️  **Additional Properties:**")
 #     # print(f"   • additional_kwargs: {resp.additional_kwargs}")
 #     # print(f"   • tool_calls: {resp.tool_calls}")
 #     # print(f"   • invalid_tool_calls: {resp.invalid_tool_calls}")
-    
+
 #     # print(f"\n💡 **Useful Methods:**")
 #     # print(f"   • resp.content - The main text response")
 #     # print(f"   • resp.usage_metadata - Token usage info")
@@ -320,7 +339,7 @@ async def main():
 #     # print(f"   • resp.id - Unique response ID")
 #     # print(f"   • resp.dict() - Convert to dictionary")
 #     # print(f"   • resp.json() - Convert to JSON string")
-    
+
 #     # # Demonstrate some useful methods
 #     # print(f"\n📋 **As Dictionary:**")
 #     # resp_dict = resp.model_dump()
@@ -329,15 +348,16 @@ async def main():
 #     #         print(f"   {key}: {str(value)[:50]}...")
 #     #     else:
 #     #         print(f"   {key}: {value}")
-    
+
 #     # print(f"\n🔗 **JSON Format:**")
 #     # print(resp.model_dump_json()[:200] + "...")
-    
+
 
 # if __name__ == "__main__":
 #     asyncio.run(main())
 
 import chainlit as cl
+
 
 @cl.on_message
 async def on_message(msg: cl.Message):
@@ -366,13 +386,26 @@ async def on_message(msg: cl.Message):
         query_res = execute_query(answer.content)
         if len(query_res) < 1:
             logging.warning("⚠️ No results, trying to fix")
-            messages.append(("user", f"""The query you provided returned no results, please fix the query:\n\n{answer.content}"""))
+            messages.append(
+                (
+                    "user",
+                    f"""The query you provided returned no results, please fix the query:\n\n{answer.content}""",
+                )
+            )
         else:
-            logging.info(f"✅ Got {len(query_res)} results! Summarizing them, then stopping the chat")
+            logging.info(
+                f"✅ Got {len(query_res)} results! Summarizing them, then stopping the chat"
+            )
             async with cl.Step(name=f"{len(query_res)} query results ✨") as step:
                 step.output = f"```json\n{json.dumps(query_res, indent=2)}\n```"
-            messages.append(("user", f"""The query you provided returned these results, summarize them:\n\n{json.dumps(query_res, indent=2)}"""))
+            messages.append(
+                (
+                    "user",
+                    f"""The query you provided returned these results, summarize them:\n\n{json.dumps(query_res, indent=2)}""",
+                )
+            )
             query_success = True
+
 
 @cl.set_starters
 async def set_starters():
