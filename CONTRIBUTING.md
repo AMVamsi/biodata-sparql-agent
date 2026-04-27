@@ -1,4 +1,4 @@
-# Contributing to llm-biodata-training
+# Contributing to biodata-sparql-agent
 
 Thank you for contributing! This guide covers the development workflow, branch strategy,
 commit conventions, and code quality standards for this project.
@@ -34,8 +34,8 @@ commit conventions, and code quality standards for this project.
 
 ```bash
 # Clone the repository
-git clone https://github.com/AMVamsi/llm-biodata-training.git
-cd llm-biodata-training/project
+git clone https://github.com/AMVamsi/biodata-sparql-agent.git
+cd biodata-sparql-agent/project
 
 # Install dependencies using uv
 uv sync
@@ -76,7 +76,7 @@ The chat interface will be available at `http://localhost:8000`.
 ## 2. Project Structure
 
 ```text
-llm-biodata-training/
+biodata-sparql-agent/
 ├── project/               # Python chatbot application — primary development area
 │   ├── app.py             # Application entrypoint (LLM, vector DB, Chainlit UI)
 │   ├── pyproject.toml     # Python dependencies and tool config

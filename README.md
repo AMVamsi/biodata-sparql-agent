@@ -1,11 +1,11 @@
-# 🧑‍🏫 Using Large Language Models for Biodata Exploration
+# Biodata SPARQL Agent
 
-[![Deploy to GitHub pages](https://github.com/sib-swiss/llm-biodata-training/actions/workflows/deploy.yml/badge.svg)](https://github.com/sib-swiss/llm-biodata-training/actions/workflows/deploy.yml)
+[![Deploy to GitHub pages](https://github.com/AMVamsi/biodata-sparql-agent/actions/workflows/deploy.yml/badge.svg)](https://github.com/AMVamsi/biodata-sparql-agent/actions/workflows/deploy.yml)
+[![Python CI](https://github.com/AMVamsi/biodata-sparql-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/AMVamsi/biodata-sparql-agent/actions/workflows/ci.yml)
 
-Course description: https://www.sib.swiss/training/course/20250930_USLLM
+A RAG chatbot that converts natural language questions into SPARQL queries, executes them against live biological databases (UniProt, Bgee, OMA Browser), and summarises the results — all via a Chainlit chat UI.
 
-- [Theory slides (morning session) as PDF here](https://github.com/sib-swiss/llm-biodata-training/blob/main/public/2025-09-30-LLM_From_Theory_To_Practice.pdf)
-- Pratical slides: https://sib-swiss.github.io/llm-biodata-training
+- Practical slides: https://AMVamsi.github.io/biodata-sparql-agent
 
 ## 🛠 Slides development
 

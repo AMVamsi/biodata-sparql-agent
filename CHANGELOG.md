@@ -3,14 +3,20 @@
 All notable changes to this project will be documented in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
-Versions correspond to milestones in the course `MSLS_V5_15 – Developing Software as a Product`.
 
 ---
 
 ## [Unreleased]
 
 ### Added
-- `AGENTS.md` — contributor and AI agent operating guide with scope guardrails
+- `project/tests/conftest.py` — mocks heavy runtime dependencies (FastEmbed, Qdrant, LLM, Chainlit) so `app.py` can be imported in tests without API keys or model downloads
+- `project/tests/unit/test_app.py` — 13 unit tests for `format_doc()` (8 tests) and `load_chat_model()` error paths (5 tests); 40% coverage
+- `[dependency-groups] dev` in `project/pyproject.toml` — ruff, mypy, pytest, pytest-cov, pytest-asyncio
+- `[tool.ruff]`, `[tool.ruff.lint]`, `[tool.pytest.ini_options]`, `[tool.coverage.run]`, `[tool.mypy]` config sections in `project/pyproject.toml`
+- `.github/workflows/ci.yml` — 3-job Python CI pipeline: `lint` (ruff check + format), `typecheck` (mypy), `test` (pytest + coverage + Codecov upload); triggers on push to `main` and PRs
+
+### Changed
+- `project/app.py` — whitespace-only reformatting applied by `ruff format` (no logic changes)
 - `CONTRIBUTING.md` — development workflow, branch naming, commit conventions, PR template
 - `docs/FEATURE_STATUS.md` — single source of truth for implementation status
 - `docs/architecture.md` — detailed architecture, data flow, module boundaries
@@ -30,7 +36,7 @@ Versions correspond to milestones in the course `MSLS_V5_15 – Developing Softw
 
 ### Summary
 Initial commit of the SPARQL Query Assistant chatbot source code. This is the baseline
-state of the project as it existed at the start of the `MSLS_V5_15` course development sprint.
+state of the project at the start of the development sprint.
 
 ### Added
 - `project/app.py` — main application; implements:

@@ -1,4 +1,4 @@
-# AGENTS.md — LLM Biodata Training: Contributor Guide and Project Guardrails
+# AGENTS.md — biodata-sparql-agent: Contributor Guide and Project Guardrails
 
 ---
 
@@ -21,7 +21,8 @@
 
 ### What is planned — do not build unless explicitly asked
 
-`ruff config`, `mypy config`, `pytest + tests/`, `Python CI workflow`, `demos/` folder reorganisation,
+`ruff config`, `mypy config`, `pytest + tests/`, `Python CI workflow` are now **implemented**.
+Still planned: `demos/` folder reorganisation,
 `project/README.md`, customised `chainlit.md`, branch protection
 
 ### Locked — do not change without explicit instruction
@@ -71,13 +72,12 @@ Scope completed · Files changed · Tests added · Verification run · Follow-up
 ## 1. Project Summary
 
 ### 1.1 Project Name
-`llm-biodata-training` (deployed as `tutorial-biodata-agent`)
+`biodata-sparql-agent`
 
 ### 1.2 Project Purpose
-This repository contains two distinct components maintained together:
+This repository contains two components:
 
-1. **Training slides** — A Vite/Reveal.js slide deck for the SIB Swiss training course
-   *"Using Large Language Models for Biodata Exploration"* (`MSLS_V5_15`).
+1. **Training slides** — A Vite/Reveal.js slide deck on using LLMs for biodata exploration.
 2. **SPARQL Query Assistant chatbot** — A Python RAG (Retrieval-Augmented Generation)
    application that helps researchers write SPARQL queries against biological databases through
    a natural language interface.
@@ -105,7 +105,7 @@ The system will:
 
 ### 1.5 Repository Layout
 ```text
-llm-biodata-training/
+biodata-sparql-agent/
 ├── project/                    # ← Python chatbot application (primary scope)
 │   ├── app.py                  # Main application entrypoint
 │   ├── pyproject.toml          # Python project metadata and dependencies
@@ -141,10 +141,10 @@ This section prevents agents from re-implementing already-completed work.
 | SPARQL execution (`execute_query`) | `implemented` | Extracts + runs query from LLM response |
 | Retry loop with corrective feedback | `implemented` | Max 3 tries, feedback injection on no-results |
 | Chainlit web UI | `implemented` | `on_message`, `set_starters`; streaming responses |
-| Linter / formatter (ruff) | `planned` | Not yet configured in `pyproject.toml` |
-| Type checker (mypy) | `planned` | Not yet configured |
-| Tests (pytest) | `planned` | No test suite exists yet |
-| CI/CD — Python (GitHub Actions) | `planned` | Only slide deploy workflow exists |
+| Linter / formatter (ruff) | `implemented` | Configured in `pyproject.toml`; CI `lint` job active |
+| Type checker (mypy) | `implemented` | Configured in `pyproject.toml`; CI `typecheck` job active |
+| Tests (pytest) | `implemented` | 13 unit tests; 40% coverage; CI `test` job active |
+| CI/CD — Python (GitHub Actions) | `implemented` | `.github/workflows/ci.yml`; 3 jobs: lint, typecheck, test |
 | Code profiling (flamegraph) | `planned` | Required by Week 16 task |
 | Demo scripts reorganised to `demos/` | `planned` | Currently mixed with app code in `project/` |
 | Project `README.md` for chatbot | `planned` | Existing README covers slides only |
