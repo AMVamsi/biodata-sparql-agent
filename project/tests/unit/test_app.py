@@ -1,11 +1,11 @@
-"""Unit tests for project/app.py.
+"""Unit tests for the SPARQL Query Assistant modules.
 
 Coverage targets (pure / easily-isolated functions):
-  - format_doc()        — pure function, most testable
+  - format_doc()        — pure function in retrieval.py, most testable
   - load_chat_model()   — error path (unknown provider raises ValueError)
 
 Heavy dependencies (LLM, FastEmbed, Qdrant, Chainlit, sparql-llm) are mocked
-in tests/conftest.py so that app.py can be imported without API keys or
+in tests/conftest.py so that the modules can be imported without API keys or
 model downloads.
 """
 
@@ -15,11 +15,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# Make sure the project directory is on the path so `import app` works from
+# Make sure the project directory is on the path so module imports work from
 # any working directory.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-import app  # noqa: E402
+from llm import load_chat_model  # noqa: E402
+from retrieval import format_doc  # noqa: E402
 
 
 # ── helpers ────────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ class TestFormatDoc:
                 "endpoint_url": "https://sparql.omabrowser.org/sparql/",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         assert "#+ endpoint: https://sparql.omabrowser.org/sparql/" in result
 
     def test_query_example_uses_sparql_language_tag(self):
@@ -62,7 +63,7 @@ class TestFormatDoc:
                 "endpoint_url": "https://sparql.uniprot.org/sparql/",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         assert "```sparql" in result
 
     def test_schema_doc_has_no_endpoint_comment(self):
@@ -75,7 +76,7 @@ class TestFormatDoc:
                 "endpoint_url": "https://sparql.uniprot.org/sparql/",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         assert "#+ endpoint:" not in result
 
     def test_schema_doc_has_empty_language_tag(self):
@@ -88,7 +89,7 @@ class TestFormatDoc:
                 "endpoint_url": "https://sparql.uniprot.org/sparql/",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         # The code block should open with triple backticks immediately followed
         # by a newline (empty language tag), not ```sparql.
         assert "```\n" in result
@@ -104,7 +105,7 @@ class TestFormatDoc:
                 "endpoint_url": "https://www.bgee.org/sparql/",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         assert question in result
 
     def test_output_contains_answer_text(self):
@@ -118,7 +119,7 @@ class TestFormatDoc:
                 "endpoint_url": "https://sparql.uniprot.org/sparql/",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         assert answer in result
 
     def test_missing_endpoint_url_shows_not_provided(self):
@@ -130,7 +131,7 @@ class TestFormatDoc:
                 "answer": "SELECT * WHERE {}",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         assert "#+ endpoint: not provided" in result
 
     def test_output_ends_with_double_newline(self):
@@ -143,7 +144,7 @@ class TestFormatDoc:
                 "endpoint_url": "https://sparql.uniprot.org/sparql/",
             }
         )
-        result = app.format_doc(doc)
+        result = format_doc(doc)
         assert result.endswith("\n\n")
 
 
@@ -157,27 +158,27 @@ class TestLoadChatModel:
     def test_unknown_provider_raises_value_error(self):
         """An unrecognised provider prefix must raise ValueError."""
         with pytest.raises(ValueError, match="Unknown provider: ollama"):
-            app.load_chat_model("ollama/llama3")
+            load_chat_model("ollama/llama3")
 
     def test_unknown_provider_message_contains_provider_name(self):
         """The error message must name the bad provider."""
         with pytest.raises(ValueError) as exc_info:
-            app.load_chat_model("anthropic/claude-3-5-sonnet")
+            load_chat_model("anthropic/claude-3-5-sonnet")
         assert "anthropic" in str(exc_info.value)
 
     def test_model_string_without_slash_raises(self):
         """A model string with no '/' separator must raise (split fails)."""
         with pytest.raises((ValueError, AttributeError)):
-            app.load_chat_model("mistral-small-latest")
+            load_chat_model("mistral-small-latest")
 
     def test_mistral_provider_accepted(self):
         """'mistralai' prefix must be accepted without raising."""
         # The factory calls ChatMistralAI(...) which is mocked in conftest,
         # so no real API call is made.
-        result = app.load_chat_model("mistralai/mistral-small-latest")
+        result = load_chat_model("mistralai/mistral-small-latest")
         assert result is not None
 
     def test_groq_provider_accepted(self):
         """'groq' prefix must be accepted without raising."""
-        result = app.load_chat_model("groq/llama-3.1-8b-instant")
+        result = load_chat_model("groq/llama-3.1-8b-instant")
         assert result is not None

@@ -1,9 +1,10 @@
 """
-Patch heavy runtime dependencies so app.py can be imported without
-API keys, model downloads, or a running Qdrant instance.
+Patch heavy runtime dependencies so the application modules can be imported
+without API keys, model downloads, or a running Qdrant instance.
 
-All patches are applied to sys.modules before any test file imports app,
-which means they intercept the module-level instantiation of:
+All patches are applied to sys.modules before any test file imports the
+application modules, which means they intercept the module-level
+instantiation of:
   - TextEmbedding (FastEmbed) — would download the BAAI model
   - QdrantClient              — would open the on-disk vector DB
   - ChatMistralAI             — would require MISTRAL_API_KEY
