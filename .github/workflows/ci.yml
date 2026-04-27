@@ -52,7 +52,7 @@ jobs:
               run: uv sync --group dev
 
             - name: mypy
-              run: uv run mypy app.py
+              run: uv run mypy app.py config.py llm.py retrieval.py sparql.py
 
     test:
         name: Tests & Coverage (pytest)
@@ -69,7 +69,7 @@ jobs:
               run: uv sync --group dev
 
             - name: pytest with coverage
-              run: uv run pytest --cov=app --cov-report=xml --cov-report=term-missing
+              run: uv run pytest --cov --cov-report=xml --cov-report=term-missing
 
             - name: Upload coverage to Codecov
               uses: codecov/codecov-action@v5

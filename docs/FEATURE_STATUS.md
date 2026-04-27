@@ -20,26 +20,23 @@
 
 ---
 
-## Application Core (`project/app.py`)
+## Application Core
 
 | Feature | Status | Notes | Implemented In |
 |---------|--------|-------|----------------|
-| `load_chat_model()` | `implemented` | Provider/model string split; Mistral + Groq backends | `app.py:12` |
-| `index_endpoints()` | `implemented` | UniProt, Bgee, OMA; deletes + recreates collection on each call | `app.py:62` |
-| `retrieve_docs()` | `implemented` | Filters by `doc_type`: query examples + schema shapes; top-3 each | `app.py:101` |
-| `format_doc()` | `implemented` | Pure function; markdown codeblock with `#+ endpoint:` comment | `app.py:133` |
-| `execute_query()` | `implemented` | Extracts SPARQL from LLM markdown; calls live SPARQL endpoint | `app.py:174` |
-| Retry loop (max 3 attempts) | `implemented` | Appends corrective feedback on no-results; re-calls LLM | `app.py:189` |
-| `on_message()` Chainlit handler | `implemented` | Streaming responses; step display for retrieved docs + results | `app.py:343` |
-| `set_starters()` | `implemented` | Rat orthologs starter question | `app.py:378` |
-| LLM provider: Mistral AI | `implemented` | `mistralai/mistral-small-latest` (active) | `app.py:36` |
-| LLM provider: Groq | `implemented` | Commented out by default; toggle by changing `load_chat_model` call | `app.py:37` |
-| LLM provider: Ollama | `baseline` | Dependency declared in `pyproject.toml`; not wired in function | `pyproject.toml` |
-| Return type fix for `execute_query` | `todo` | Should be `list[dict] \| None`; currently annotated as `list[dict]` only | `app.py:174` |
-| Commented-out dead code removal | `todo` | ~4 old `async def main()` implementations still in file | `app.py:150–340` |
-| Configuration constants extracted | `todo` | `retrieved_docs_count`, `max_try_count`, etc. scattered mid-file | `app.py` |
-| Type annotations completed | `todo` | `index_endpoints()` missing return type; others partially typed | `app.py` |
-| Docstrings completed | `todo` | `load_chat_model()` and `index_endpoints()` missing docstrings | `app.py` |
+| `load_chat_model()` | `implemented` | Provider/model string split; Mistral + Groq backends | `llm.py` |
+| `index_endpoints()` | `implemented` | UniProt, Bgee, OMA; deletes + recreates collection on each call | `retrieval.py` |
+| `retrieve_docs()` | `implemented` | Filters by `doc_type`: query examples + schema shapes; top-3 each | `retrieval.py` |
+| `format_doc()` | `implemented` | Pure function; markdown codeblock with `#+ endpoint:` comment | `retrieval.py` |
+| `execute_query()` | `implemented` | Extracts SPARQL from LLM markdown; calls live SPARQL endpoint; returns `list \| None` | `sparql.py` |
+| Retry loop (max 3 attempts) | `implemented` | Appends corrective feedback on no-results; re-calls LLM | `app.py` |
+| `on_message()` Chainlit handler | `implemented` | Streaming responses; step display for retrieved docs + results | `app.py` |
+| `set_starters()` | `implemented` | Rat orthologs starter question | `app.py` |
+| LLM provider: Mistral AI | `implemented` | `mistralai/mistral-small-latest` (active) | `app.py` |
+| LLM provider: Groq | `implemented` | Commented out by default; toggle by changing `load_chat_model` call | `app.py` |
+| Constants + SYSTEM_PROMPT | `implemented` | Extracted to `config.py`; SYSTEM_PROMPT locked | `config.py` |
+| Code modularisation | `implemented` | `app.py` split into `config`, `llm`, `retrieval`, `sparql` — clean modules | all |
+| mypy zero-error pass | `implemented` | All type errors resolved across 5 modules | all |
 
 ---
 
@@ -59,9 +56,9 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| `ruff` linter + formatter | `implemented` | Configured in `pyproject.toml`; `app.py` E402/F401/I001 suppressed (tracked) |
-| `mypy` type checker | `implemented` | Configured in `pyproject.toml`; `ignore_missing_imports = true` |
-| `pytest` + `pytest-cov` | `implemented` | Configured in `pyproject.toml`; 13 tests, 40% coverage |
+| `ruff` linter + formatter | `implemented` | Configured in `pyproject.toml`; zero errors across all modules |
+| `mypy` type checker | `implemented` | Configured in `pyproject.toml`; `ignore_missing_imports = true`; 0 errors |
+| `pytest` + `pytest-cov` | `implemented` | Configured in `pyproject.toml`; 13 tests, 69% coverage |
 | `pytest-asyncio` | `implemented` | `asyncio_mode = auto`; ready for async Chainlit tests |
 | Dev dependency group in `pyproject.toml` | `implemented` | `[dependency-groups] dev` with ruff, mypy, pytest, pytest-cov, pytest-asyncio |
 | `__pycache__/` in `.gitignore` | `todo` | Bytecode already committed; need to untrack + add to `.gitignore` |

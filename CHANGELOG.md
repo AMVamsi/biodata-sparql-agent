@@ -9,6 +9,21 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- `project/config.py` — all constants (`EMBEDDING_MODEL_NAME`, `EMBEDDING_DIMENSIONS`, `COLLECTION_NAME`, `MAX_TRY_COUNT`, `RETRIEVED_DOCS_COUNT`, `ENDPOINTS`) and locked `SYSTEM_PROMPT`
+- `project/llm.py` — `load_chat_model()` factory; `# type: ignore[call-arg]` for ChatMistralAI stub mismatch
+- `project/retrieval.py` — `embedding_model`, `vectordb`, `index_endpoints()`, `retrieve_docs()`, `format_doc()`; `payload` None-guard in `format_doc`
+- `project/sparql.py` — `execute_query()` with correct `list[dict] | None` return type and proper walrus-style type narrowing
+
+### Changed
+- `project/app.py` — rewritten as thin Chainlit entry point (~90 lines); removed 320 lines of dead commented-out code; imports reorganised; all mypy errors resolved (`resp.content` isinstance check, `getattr` for `usage_metadata`, `if not query_res` None-guard, `set_starters` user parameter)
+- `project/tests/unit/test_app.py` — updated to import `format_doc` from `retrieval` and `load_chat_model` from `llm`
+- `project/tests/conftest.py` — updated docstring to reflect multi-module scope
+- `project/pyproject.toml` — removed `app.py` per-file-ignores (no longer needed); updated coverage source to `["config", "llm", "retrieval"]`; added `relative_files = true`
+- `.github/workflows/ci.yml` — `typecheck` job now checks all 5 modules; `test` job uses `--cov` (reads from pyproject.toml config)
+- `AGENTS.md` — quick-brief function table updated to new module locations; `SYSTEM_PROMPT` lock updated to `config.py`; section 2 status table updated; known-bugs list updated
+- `docs/FEATURE_STATUS.md` — application core table rewritten to reflect modular structure; ruff/mypy/pytest entries updated
+
+### Added
 - `project/tests/conftest.py` — mocks heavy runtime dependencies (FastEmbed, Qdrant, LLM, Chainlit) so `app.py` can be imported in tests without API keys or model downloads
 - `project/tests/unit/test_app.py` — 13 unit tests for `format_doc()` (8 tests) and `load_chat_model()` error paths (5 tests); 40% coverage
 - `[dependency-groups] dev` in `project/pyproject.toml` — ruff, mypy, pytest, pytest-cov, pytest-asyncio

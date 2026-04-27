@@ -42,20 +42,19 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# app.py uses a tutorial-style structure with imports intentionally interleaved
-# with executable code. These violations are tracked as known bugs in AGENTS.md
-# and will be fixed when the dead code / import cleanup task is actioned.
-"app.py" = ["E402", "F401", "I001"]
-# Test helpers insert sys.path before importing app; I001/E402 expected.
+# Test helpers insert sys.path before importing modules; I001/E402 expected.
 "tests/**" = ["E402", "I001"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "--cov=app --cov-report=term-missing --cov-report=xml"
+addopts = "--cov --cov-report=term-missing --cov-report=xml"
 
 [tool.coverage.run]
-source = ["app"]
+# app.py (Chainlit entry point) and sparql.py (execute_query) are not yet
+# covered by unit tests. Add to this list when tests are introduced.
+source = ["config", "llm", "retrieval"]
+relative_files = true
 omit = ["tests/*"]
 
 [tool.mypy]

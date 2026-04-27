@@ -9,15 +9,16 @@
 ### What is already implemented — do not rebuild
 
 | Function | File | Notes |
-|----------|------|-------|
-| `load_chat_model()` | `app.py:12` | Mistral + Groq; raises ValueError for unknown provider |
-| `index_endpoints()` | `app.py:62` | UniProt, Bgee, OMA; deletes + recreates collection |
-| `retrieve_docs()` | `app.py:101` | Top-3 per doc_type; two types filtered |
-| `format_doc()` | `app.py:133` | Pure function; most testable; start tests here |
-| `execute_query()` | `app.py:174` | Extracts SPARQL from markdown; calls live endpoint |
-| Retry loop | `app.py:189` | Max 3 attempts; corrective feedback injection |
-| `on_message()` | `app.py:343` | Chainlit handler; streaming responses |
-| `set_starters()` | `app.py:378` | One starter question |
+|----------|------|-----------|
+| `load_chat_model()` | `llm.py` | Mistral + Groq; raises ValueError for unknown provider |
+| `index_endpoints()` | `retrieval.py` | UniProt, Bgee, OMA; deletes + recreates collection |
+| `retrieve_docs()` | `retrieval.py` | Top-3 per doc_type; two types filtered |
+| `format_doc()` | `retrieval.py` | Pure function; most testable; start tests here |
+| `execute_query()` | `sparql.py` | Extracts SPARQL from markdown; calls live endpoint |
+| Retry loop | `app.py:44` | Max 3 attempts; corrective feedback injection |
+| `on_message()` | `app.py:28` | Chainlit handler; streaming responses |
+| `set_starters()` | `app.py:83` | One starter question |
+| Constants + SYSTEM_PROMPT | `config.py` | Endpoints, dimensions, counts, locked prompt |
 
 ### What is planned — do not build unless explicitly asked
 
@@ -28,19 +29,18 @@ Still planned: `demos/` folder reorganisation,
 ### Locked — do not change without explicit instruction
 
 | File / Symbol | Reason |
-|---------------|--------|
-| `SYSTEM_PROMPT` in `app.py` | Controls LLM output format; breaking it breaks SPARQL extraction |
+|---------------|---------|
+| `SYSTEM_PROMPT` in `config.py` | Controls LLM output format; breaking it breaks SPARQL extraction |
 | `project/data/vectordb/` | Runtime data; recreated by `index_endpoints()` |
 | `project/uv.lock` | Auto-generated; never hand-edit |
 | `.github/workflows/deploy.yml` | Slides CI; unrelated to chatbot |
 
 ### Known bugs to fix (when task asks for it)
 
-- `execute_query()` return type annotated as `list[dict]` — should be `list[dict] | None`
 - `project/__pycache__/app.cpython-312.pyc` tracked in git — needs `git rm --cached`
 - `project/data/vectordb/.lock` tracked in git — needs `git rm --cached`
-- ~200 lines of dead commented-out code in `app.py` lines 150–340
 - `langchain-ollama` declared in `pyproject.toml` but never used in code
+- `sparql.py` and `app.py` have no unit tests yet (0% coverage)
 
 ### Before every change
 
@@ -107,7 +107,11 @@ The system will:
 ```text
 biodata-sparql-agent/
 ├── project/                    # ← Python chatbot application (primary scope)
-│   ├── app.py                  # Main application entrypoint
+│   ├── app.py                  # Chainlit entry point (on_message, set_starters)
+│   ├── config.py               # Constants, endpoint list, SYSTEM_PROMPT
+│   ├── llm.py                  # load_chat_model() factory
+│   ├── retrieval.py            # index_endpoints(), retrieve_docs(), format_doc()
+│   ├── sparql.py               # execute_query()
 │   ├── pyproject.toml          # Python project metadata and dependencies
 │   ├── .env.example            # Template for required API keys
 │   ├── data/vectordb/          # Local Qdrant vector database (indexed at runtime)
@@ -138,13 +142,14 @@ This section prevents agents from re-implementing already-completed work.
 | Endpoint indexing (`index_endpoints`) | `implemented` | UniProt, Bgee, OMA; uses `sparql-llm` loaders |
 | Document retrieval (`retrieve_docs`) | `implemented` | Filtered by `doc_type`: query examples + schema shapes |
 | Document formatting (`format_doc`) | `implemented` | Returns markdown codeblock with endpoint comment |
-| SPARQL execution (`execute_query`) | `implemented` | Extracts + runs query from LLM response |
+| SPARQL execution (`execute_query`) | `implemented` | In `sparql.py`; extracts + runs query from LLM response |
 | Retry loop with corrective feedback | `implemented` | Max 3 tries, feedback injection on no-results |
 | Chainlit web UI | `implemented` | `on_message`, `set_starters`; streaming responses |
 | Linter / formatter (ruff) | `implemented` | Configured in `pyproject.toml`; CI `lint` job active |
 | Type checker (mypy) | `implemented` | Configured in `pyproject.toml`; CI `typecheck` job active |
-| Tests (pytest) | `implemented` | 13 unit tests; 40% coverage; CI `test` job active |
+| Tests (pytest) | `implemented` | 13 unit tests; 69% coverage; CI `test` job active |
 | CI/CD — Python (GitHub Actions) | `implemented` | `.github/workflows/ci.yml`; 3 jobs: lint, typecheck, test |
+| Code modularisation | `implemented` | `app.py` split into `config`, `llm`, `retrieval`, `sparql` |
 | Code profiling (flamegraph) | `planned` | Required by Week 16 task |
 | Demo scripts reorganised to `demos/` | `planned` | Currently mixed with app code in `project/` |
 | Project `README.md` for chatbot | `planned` | Existing README covers slides only |
