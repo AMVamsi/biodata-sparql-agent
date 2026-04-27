@@ -209,6 +209,12 @@ tempCodeRunnerFile.py
 # PyPI configuration file
 .pypirc
 
+# Node.js dependencies
+node_modules/
+
+# PDF files (course / assessment documents — not part of the codebase)
+*.pdf
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

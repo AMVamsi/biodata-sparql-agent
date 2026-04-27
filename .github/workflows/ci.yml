@@ -1,0 +1,81 @@
+name: Python CI
+
+on:
+    push:
+        branches: [ main ]
+        paths:
+            - "project/**"
+            - ".github/workflows/ci.yml"
+    pull_request:
+        branches: [ main ]
+        paths:
+            - "project/**"
+            - ".github/workflows/ci.yml"
+
+defaults:
+    run:
+        working-directory: project
+
+jobs:
+    lint:
+        name: Lint & Format (ruff)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up uv
+              uses: astral-sh/setup-uv@v5
+              with:
+                  enable-cache: true
+
+            - name: Install dev dependencies
+              run: uv sync --group dev
+
+            - name: ruff — lint
+              run: uv run ruff check .
+
+            - name: ruff — format check
+              run: uv run ruff format --check .
+
+    typecheck:
+        name: Type Check (mypy)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up uv
+              uses: astral-sh/setup-uv@v5
+              with:
+                  enable-cache: true
+
+            - name: Install dev dependencies
+              run: uv sync --group dev
+
+            - name: mypy
+              run: uv run mypy app.py
+
+    test:
+        name: Tests & Coverage (pytest)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up uv
+              uses: astral-sh/setup-uv@v5
+              with:
+                  enable-cache: true
+
+            - name: Install dev dependencies
+              run: uv sync --group dev
+
+            - name: pytest with coverage
+              run: uv run pytest --cov=app --cov-report=xml --cov-report=term-missing
+
+            - name: Upload coverage to Codecov
+              uses: codecov/codecov-action@v5
+              with:
+                  files: project/coverage.xml
+                  flags: unittests
+                  fail_ci_if_error: false
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

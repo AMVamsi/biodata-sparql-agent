@@ -1,5 +1,5 @@
 [project]
-name = "tutorial-biodata-agent"
+name = "biodata-sparql-agent"
 version = "0.0.1"
 requires-python = "==3.12.*"
 dependencies = [
@@ -12,3 +12,54 @@ dependencies = [
     "fastembed >=0.7.3",
     "chainlit >=2.8.1",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff >=0.9.0",
+    "mypy >=1.15.0",
+    "pytest >=8.3.0",
+    "pytest-cov >=6.1.0",
+    "pytest-asyncio >=0.25.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+# Demo/tutorial scripts are planned to move to demos/ subfolder; exclude them
+# from enforcement until that reorganisation task is actioned.
+exclude = [
+    "demo_embedding_search.py",
+    "embedding_timing_demo.py",
+    "explore_endpoints.py",
+    "show_endpoint_processing.py",
+    "step2_explanation.py",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",  # line too long — handled by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+# app.py uses a tutorial-style structure with imports intentionally interleaved
+# with executable code. These violations are tracked as known bugs in AGENTS.md
+# and will be fixed when the dead code / import cleanup task is actioned.
+"app.py" = ["E402", "F401", "I001"]
+# Test helpers insert sys.path before importing app; I001/E402 expected.
+"tests/**" = ["E402", "I001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "--cov=app --cov-report=term-missing --cov-report=xml"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["tests/*"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_ignores = true
